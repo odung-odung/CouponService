@@ -1,6 +1,7 @@
 package com.dev.coupon.product.dto;
 
 import lombok.Getter;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -13,12 +14,23 @@ public class PageResponse<T> {
 	private final int totalPages;
 	private final boolean hasNext;
 
-	public PageResponse(List<T> data, int page, int size, long totalElements, int totlaPages, boolean hasNext) {
+	public PageResponse(List<T> data, int page, int size, long totalElements, int totalPages, boolean hasNext) {
 		this.data = data;
 		this.page = page;
 		this.size = size;
 		this.totalElements = totalElements;
-		this.totalPages = totlaPages;
+		this.totalPages = totalPages;
 		this.hasNext = hasNext;
+	}
+
+	public static <T>PageResponse<T> from(Page<T> page) {
+		return new PageResponse<>(
+				  page.getContent(),
+				  page.getNumber(),
+				  page.getSize(),
+				  page.getTotalElements(),
+				  page.getTotalPages(),
+				  page.hasNext()
+		);
 	}
 }

@@ -23,6 +23,6 @@ public class AdminProductController {
 
 	@GetMapping
 	public PageResponse<ProductResponse> list(Pageable pageable) {
-		return productService.findAll(pageable);
+		return productService.getProductPage(pageable);
 	}
 }

@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -26,28 +25,14 @@ public class ProductService {
 				  .name(request.getName())
 				  .price(request.getPrice())
 				  .build());
-
-		return new ProductResponse(product.getId(), product.getName(), product.getPrice());
+		return ProductResponse.from(product);
 	}
 
 	@Transactional(readOnly = true)
-	public PageResponse<ProductResponse> findAll(Pageable pageable) {
-		Page<Product> page = repository.findAll(pageable);
-		List<ProductResponse> data = page
-				  .map(product -> new ProductResponse(
-							 product.getId(),
-							 product.getName(),
-							 product.getPrice()
-				  ))
-				  .toList();
+	public PageResponse<ProductResponse> getProductPage(Pageable pageable) {
+		Page<ProductResponse> page = repository.findAll(pageable)
+				  .map(ProductResponse::from);
 
-		return new PageResponse<ProductResponse>(
-				  data,
-				  page.getNumber(),
-				  page.getSize(),
-				  page.getTotalElements(),
-				  page.getTotalPages(),
-				  page.hasNext()
-		);
+		return PageResponse.from(page);
 	}
 }
