@@ -1,8 +1,11 @@
 package com.dev.coupon.coupon.service;
 
+import com.dev.coupon.common.exception.BusinessException;
 import com.dev.coupon.coupon.domain.CouponEvent;
+import com.dev.coupon.coupon.domain.DiscountType;
 import com.dev.coupon.coupon.dto.CouponEventCreateRequest;
 import com.dev.coupon.coupon.dto.CouponEventResponse;
+import com.dev.coupon.coupon.exception.CouponErrorCode;
 import com.dev.coupon.coupon.repository.CouponEventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +21,10 @@ public class CouponEventService {
 
 	@Transactional
 	public CouponEventResponse create(CouponEventCreateRequest request) {
+		if (request.getDiscountType() == DiscountType.FIXED_AMOUNT) {
+			throw new BusinessException(CouponErrorCode.FIXED_AMOUNT_MAX_DISCOUNT_NOT_ALLOWED);
+		}
+
 		CouponEvent event = repository.save(CouponEvent.builder()
 				  .name(request.getName())
 				  .status(request.getStatus())
