@@ -21,17 +21,17 @@ public class CouponEventCreateRequest extends BaseEntity {
 	private DiscountType discountType;
 
 	@NotNull
-	@PositiveOrZero
+	@Positive
 	private Long discountValue;
 
-	private long maxDiscountAmount;
+	// @Positive를 걸지 않는다.
+	private Long maxDiscountAmount;
 
 	@NotNull
 	@Positive
 	private int totalQuantity;
 
 	@NotNull
-	@FutureOrPresent
 	private LocalDateTime issueStartAt;
 
 	@NotNull
