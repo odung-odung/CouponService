@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Entity
@@ -95,6 +96,32 @@ public class CouponEvent extends BaseEntity {
 				  issueEndAt
 		);
 	}
+
+	public Long calculateDiscountAmount(Long productPrice) {
+		Long discountAmount = 0L;
+
+		if (discountType == DiscountType.FIXED_AMOUNT) {
+			discountAmount = discountValue;
+		} else {
+			discountAmount = BigInteger.valueOf(productPrice)
+					  .multiply(BigInteger.valueOf(discountValue))
+					  .divide(BigInteger.valueOf(100))
+					  .longValueExact();
+
+			if (maxDiscountAmount != null) {
+				discountAmount = Math.min(discountAmount, maxDiscountAmount);
+			}
+		}
+		if (discountAmount < 0) {
+			return 0L;
+		}
+
+		if (discountAmount > productPrice) {
+			return productPrice;
+		}
+
+		return discountAmount;
+	};
 
 	private static void validateIssuePeriod(LocalDateTime issueStartAt, LocalDateTime issueEndAt) {
 		LocalDateTime now = LocalDateTime.now();
