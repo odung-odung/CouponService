@@ -14,7 +14,8 @@ public enum CouponErrorCode implements ErrorCode {
 	COUPON_NOT_USABLE(HttpStatus.BAD_REQUEST, "COUPON_NOT_USABLE", "사용 가능한 쿠폰이 아닙니다." ),
 	COUPON_EXPIRED(HttpStatus.BAD_REQUEST, "COUPON_EXPIRED", "만료된 쿠폰입니다."),
 	COUPON_ALREADY_USED(HttpStatus.BAD_REQUEST, "COUPON_ALREADY_USED", "이미 사용된 쿠폰입니다." ),
-	COUPON_ISSUE_NOT_FOUND(HttpStatus.BAD_REQUEST, "COUPON_ISSUE_NOT_FOUND", "찾을 수 없는 쿠폰입니다." );
+	COUPON_ISSUE_NOT_FOUND(HttpStatus.BAD_REQUEST, "COUPON_ISSUE_NOT_FOUND", "찾을 수 없는 쿠폰입니다." ),
+	INVALID_COUPON_EVENT_SEARCH_CONDITION(HttpStatus.BAD_REQUEST, "INVALID_COUPON_EVENT_SEARCH_CONDITION", "검색 기간이 올바르지 않습니다." );
 
 	private final HttpStatus httpStatus;
 	private final String code;
