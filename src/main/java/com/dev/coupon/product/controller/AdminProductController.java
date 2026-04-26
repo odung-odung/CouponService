@@ -1,6 +1,6 @@
 package com.dev.coupon.product.controller;
 
-import com.dev.coupon.product.dto.PageResponse;
+import com.dev.coupon.common.PageResponse;
 import com.dev.coupon.product.dto.ProductCreateRequest;
 import com.dev.coupon.product.dto.ProductResponse;
 import com.dev.coupon.product.repository.ProductCondition;
