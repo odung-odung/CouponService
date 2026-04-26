@@ -8,7 +8,7 @@ import com.dev.coupon.coupon.exception.ExpiredCouponException;
 import com.dev.coupon.coupon.repository.CouponIssueRepository;
 import com.dev.coupon.coupon.repository.CouponUseHistoryRepository;
 import com.dev.coupon.product.domain.Product;
-import com.dev.coupon.product.exeception.ProductErrorCode;
+import com.dev.coupon.product.exception.ProductErrorCode;
 import com.dev.coupon.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
