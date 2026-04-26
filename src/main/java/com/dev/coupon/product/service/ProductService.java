@@ -1,7 +1,7 @@
 package com.dev.coupon.product.service;
 
 import com.dev.coupon.product.domain.Product;
-import com.dev.coupon.product.dto.PageResponse;
+import com.dev.coupon.common.PageResponse;
 import com.dev.coupon.product.dto.ProductCreateRequest;
 import com.dev.coupon.product.dto.ProductResponse;
 import com.dev.coupon.product.repository.ProductCondition;
@@ -11,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -44,14 +42,7 @@ public class ProductService {
 		validationSearchCondition(condition);
 		Page<ProductResponse> page = repository.search(condition, pageable);
 
-		return new PageResponse<>(
-				  page.getContent(),
-				  page.getNumber(),
-				  page.getSize(),
-				  page.getTotalElements(),
-				  page.getTotalPages(),
-				  page.hasNext()
-		);
+		return PageResponse.from(page);
 	}
 
 	private void validationSearchCondition(ProductCondition condition) {

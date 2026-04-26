@@ -1,4 +1,4 @@
-package com.dev.coupon.product.dto;
+package com.dev.coupon.common;
 
 import lombok.Getter;
 import org.springframework.data.domain.Page;
