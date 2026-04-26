@@ -1,4 +1,4 @@
-package com.dev.coupon.product.exeception;
+package com.dev.coupon.product.exception;
 
 import com.dev.coupon.common.exception.ErrorCode;
 import lombok.Getter;
