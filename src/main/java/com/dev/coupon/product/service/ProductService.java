@@ -4,7 +4,7 @@ import com.dev.coupon.product.domain.Product;
 import com.dev.coupon.common.PageResponse;
 import com.dev.coupon.product.dto.ProductCreateRequest;
 import com.dev.coupon.product.dto.ProductResponse;
-import com.dev.coupon.product.repository.ProductCondition;
+import com.dev.coupon.product.dto.ProductCondition;
 import com.dev.coupon.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

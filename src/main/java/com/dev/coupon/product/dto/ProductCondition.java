@@ -1,4 +1,4 @@
-package com.dev.coupon.product.repository;
+package com.dev.coupon.product.dto;
 
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
