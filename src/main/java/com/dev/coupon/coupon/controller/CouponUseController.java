@@ -13,7 +13,7 @@ public class CouponUseController {
 
 	private final CouponUseService useService;
 
-	@PostMapping("/api/coupons/{couponIssueId}/use")
+	@PostMapping("/api/coupon-issues/{couponIssueId}/use")
 	public ApiResponse<Void> useCoupon(
 			  @PathVariable Long couponIssueId,
 			  @Valid @RequestBody CouponUseRequest request) {
