@@ -1,10 +1,10 @@
-package com.dev.coupon.user.repository.impl;
+package com.dev.coupon.coupon.repository.impl;
 
 import com.dev.coupon.coupon.domain.IssueStatus;
 import com.dev.coupon.coupon.domain.QCouponEvent;
 import com.dev.coupon.coupon.domain.QCouponIssue;
-import com.dev.coupon.user.dto.MyCouponListResponse;
-import com.dev.coupon.user.repository.UserCouponQueryRepository;
+import com.dev.coupon.coupon.repository.CouponIssueQueryRepository;
+import com.dev.coupon.coupon.dto.UserCouponResponse;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -13,24 +13,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-
+@Repository
 @RequiredArgsConstructor
-public class UserCouponQueryRepositoryImpl implements UserCouponQueryRepository {
+public class CouponIssueQueryRepositoryImpl implements CouponIssueQueryRepository {
 
 	private final JPAQueryFactory queryFactory;
 
 	@Override
-	public Page<MyCouponListResponse> getMyCoupons(Long userId, Pageable pageable) {
+	public Page<UserCouponResponse> findUsableCouponsByUserId(Long userId, Pageable pageable) {
 		QCouponEvent couponEvent = QCouponEvent.couponEvent;
 		QCouponIssue couponIssue = QCouponIssue.couponIssue;
 
-		List<MyCouponListResponse> content = queryFactory
+		List<UserCouponResponse> content = queryFactory
 				  .select(Projections.constructor(
-							 MyCouponListResponse.class,
+							 UserCouponResponse.class,
 							 couponEvent.id,
 							 couponIssue.id,
 							 couponEvent.name,

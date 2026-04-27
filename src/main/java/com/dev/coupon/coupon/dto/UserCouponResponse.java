@@ -1,4 +1,4 @@
-package com.dev.coupon.user.dto;
+package com.dev.coupon.coupon.dto;
 
 import com.dev.coupon.coupon.domain.DiscountType;
 import com.dev.coupon.coupon.domain.IssueStatus;
@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Getter
-public class MyCouponListResponse {
+public class UserCouponResponse {
 
 	private final Long couponEventId;
 	private final Long couponIssueId;
@@ -18,7 +18,7 @@ public class MyCouponListResponse {
 	private final Long maxDiscountAmount;
 	private final LocalDateTime expiredAt;
 
-	public MyCouponListResponse(
+	public UserCouponResponse(
 			  Long couponEventId,
 			  Long couponIssueId,
 			  String couponName,

@@ -3,7 +3,7 @@ package com.dev.coupon.user.controller;
 import com.dev.coupon.common.ApiResponse;
 import com.dev.coupon.common.PageResponse;
 import com.dev.coupon.user.dto.CouponPageRequest;
-import com.dev.coupon.user.dto.MyCouponListResponse;
+import com.dev.coupon.coupon.dto.UserCouponResponse;
 import com.dev.coupon.user.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
@@ -23,7 +23,7 @@ public class UserController {
 	private final UserService userService;
 
 	@GetMapping("/{userId}/coupons")
-	public ApiResponse<PageResponse<MyCouponListResponse>> getMyCoupons(
+	public ApiResponse<PageResponse<UserCouponResponse>> getMyCoupons(
 			  @PathVariable @Positive Long userId,
 			  @Valid CouponPageRequest request
 	) {
