@@ -17,7 +17,10 @@ public enum CouponErrorCode implements ErrorCode {
 	COUPON_ISSUE_NOT_FOUND(HttpStatus.BAD_REQUEST, "COUPON_ISSUE_NOT_FOUND", "발급된 쿠폰을 찾을 수 없습니다." ),
 	COUPON_EVENT_NOT_FOUND(HttpStatus.BAD_REQUEST, "COUPON_EVENT_NOT_FOUND", "쿠폰 이벤트를 찾을 수 없습니다." ),
 	COUPON_NOT_ISSUABLE(HttpStatus.BAD_REQUEST, "COUPON_NOT_ISSUABLE", "지금은 발급할 수 없는 쿠폰입니다."),
-	INVALID_COUPON_EVENT_SEARCH_CONDITION(HttpStatus.BAD_REQUEST, "INVALID_COUPON_EVENT_SEARCH_CONDITION", "쿠폰 이벤트 검색 기간이 올바르지 않습니다." );
+	COUPON_ALREADY_ISSUE(HttpStatus.BAD_REQUEST, "COUPON_ALREADY_ISSUE", "이미 발급 받은 쿠폰입니다." ),
+	COUPON_SOLD_OUT(HttpStatus.BAD_REQUEST, "COUPON_SOLD_OUT", "수량이 소진 되었습니다."),
+	INVALID_COUPON_EVENT_SEARCH_CONDITION(HttpStatus.BAD_REQUEST, "INVALID_COUPON_EVENT_SEARCH_CONDITION", "쿠폰 이벤트 검색 기간이 올바르지 않습니다." ),
+	INVALID_COUPON_EVENT_QUANTITY(HttpStatus.BAD_REQUEST, "INVALID_COUPON_EVENT_QUANTITY", "쿠폰 이벤트 총 수량은 1이상 이어야 생성 가능합니다." );
 
 	private final HttpStatus httpStatus;
 	private final String code;

@@ -2,11 +2,9 @@ package com.dev.coupon.coupon.domain;
 
 import com.dev.coupon.common.BaseEntity;
 import com.dev.coupon.common.exception.BusinessException;
-import com.dev.coupon.coupon.dto.CouponEventCreateRequest;
 import com.dev.coupon.coupon.exception.CouponErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -43,6 +41,9 @@ public class CouponEvent extends BaseEntity {
 	private int totalQuantity;
 
 	@Column(nullable = false)
+	private int remainingQuantity;
+
+	@Column(nullable = false)
 	private LocalDateTime issueStartAt;
 
 	@Column(nullable = false)
@@ -67,6 +68,7 @@ public class CouponEvent extends BaseEntity {
 		this.discountValue = discountValue;
 		this.maxDiscountAmount = maxDiscountAmount;
 		this.totalQuantity = totalQuantity;
+		this.remainingQuantity = totalQuantity;
 		this.issueStartAt = issueStartAt;
 		this.issueEndAt = issueEndAt;
 		this.stockResyncPending = false;

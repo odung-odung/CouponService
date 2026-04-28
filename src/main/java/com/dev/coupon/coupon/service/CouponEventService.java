@@ -19,10 +19,10 @@ import java.util.List;
 public class CouponEventService {
 
 	private final CouponEventRepository repository;
+	private final RedisIssueService redisIssueService;
 
 	@Transactional
 	public CouponEventResponse create(CouponEventCreateRequest request) {
-
 		CouponEvent event = repository.save(CouponEvent.create(
 				  request.getName(),
 				  request.getStatus(),
@@ -33,6 +33,7 @@ public class CouponEventService {
 				  request.getIssueStartAt(),
 				  request.getIssueEndAt()
 		));
+		redisIssueService.initEventStock(event.getId(), event.getRemainingQuantity());
 
 		return new CouponEventResponse(
 				  event.getId(),
@@ -70,7 +71,6 @@ public class CouponEventService {
 				&& condition.getSearchEndAt().isBefore(condition.getSearchStartAt())) {
 			throw new BusinessException(CouponErrorCode.INVALID_COUPON_EVENT_SEARCH_CONDITION);
 		}
-
 
 		return repository.search(condition);
 	}

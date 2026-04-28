@@ -3,6 +3,7 @@ package com.dev.coupon.coupon.controller;
 import com.dev.coupon.common.ApiResponse;
 import com.dev.coupon.coupon.dto.CouponIssueRequest;
 import com.dev.coupon.coupon.service.CouponIssueService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +20,7 @@ public class CouponIssueController {
 	@PostMapping("/api/coupon-events/{couponEventId}/issues")
 	public ResponseEntity<ApiResponse<Long>> issue(
 			  @PathVariable Long couponEventId,
-			  @RequestBody CouponIssueRequest request
+			  @Valid @RequestBody CouponIssueRequest request
 	) {
 		Long couponIssueId = issueService.issueCoupon(couponEventId, request.getUserId());
 		return ResponseEntity
