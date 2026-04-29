@@ -1,15 +1,26 @@
 package com.dev.coupon.common.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalException {
 
 	@ExceptionHandler(BusinessException.class)
 	public ResponseEntity<ErrorResponse> handlerBusinessException(BusinessException exception) {
 		ErrorCode errorCode = exception.getErrorCode();
+		log.warn("[BUSINESS] code = {}, message = {}", errorCode.getCode(), errorCode.getMessage());
+		return ResponseEntity.status(errorCode.getHttpStatus())
+				  .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage()));
+	}
+
+	@ExceptionHandler(SystemException.class)
+	public ResponseEntity<ErrorResponse> handlerSystemException(SystemException exception) {
+		ErrorCode errorCode = exception.getErrorCode();
+		log.error("[SYSTEM] code = {}, message = {}", errorCode.getCode(), errorCode.getMessage(), exception);
 		return ResponseEntity.status(errorCode.getHttpStatus())
 				  .body(new ErrorResponse(errorCode.getCode(), errorCode.getMessage()));
 	}
