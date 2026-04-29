@@ -33,6 +33,7 @@ public class CouponEventService {
 				  request.getIssueStartAt(),
 				  request.getIssueEndAt()
 		));
+
 		redisIssueService.initEventStock(event.getId(), event.getRemainingQuantity());
 
 		return new CouponEventResponse(

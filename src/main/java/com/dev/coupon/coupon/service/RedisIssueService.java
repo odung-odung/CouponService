@@ -2,6 +2,7 @@ package com.dev.coupon.coupon.service;
 
 import com.dev.coupon.common.exception.SystemException;
 import com.dev.coupon.coupon.domain.CouponIssueResult;
+import com.dev.coupon.coupon.exception.CouponErrorCode;
 import com.dev.coupon.coupon.exception.RedisErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +66,13 @@ public class RedisIssueService {
 	}
 
 	public void initEventStock(Long eventId, int remainingQuantity) {
-		redisTemplate.opsForValue().set(stockKey(eventId), String.valueOf(remainingQuantity));
+		Boolean initalized = redisTemplate.opsForValue()
+				  .setIfAbsent(stockKey(eventId), String.valueOf(remainingQuantity));
+
+		if (!Boolean.TRUE.equals(initalized)) {
+			throw new SystemException(CouponErrorCode.REDIS_STOCK_ALREADY_INITIALIZED);
+		}
+
 	}
 
 	private String stockKey(Long eventId) {
