@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+
 public interface CouponEventRepository extends JpaRepository<CouponEvent, Long>, CouponEventQueryRepository {
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
@@ -39,4 +41,14 @@ public interface CouponEventRepository extends JpaRepository<CouponEvent, Long>,
 
 	@Query("select ce.totalQuantity from CouponEvent ce where ce.id = :eventId")
 	int findTotalQuantityById(@Param("eventId") Long eventId);
+
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("""
+				update CouponEvent ce
+				set ce.status = 'CLOSED'
+				where ce.status = 'OPEN'
+				and ce.issueEndAt <= :now
+			""")
+	int closeExpiredEvents(LocalDateTime now);
+
 }
