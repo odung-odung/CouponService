@@ -1,8 +1,10 @@
 local stockKey = KEYS[1]
-local issueStartAtKey = KEYS[2]
-local issueEndAtKey = KEYS[3]
+local issuedUsersKey = KEYS[2]
+local issueStartAtKey = KEYS[3]
+local issueEndAtKey = KEYS[4]
 
 if redis.call('EXISTS', stockKey) == 1
+    or redis.call('EXISTS', issuedUsersKey) == 1
     or redis.call('EXISTS', issueStartAtKey) == 1
     or redis.call('EXISTS', issueEndAtKey) == 1 then
     return false

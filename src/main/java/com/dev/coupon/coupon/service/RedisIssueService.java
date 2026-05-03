@@ -97,6 +97,7 @@ public class RedisIssueService {
 				  INIT_SCRIPT,
 				  List.of(
 							 CouponRedisKey.stock(eventId),
+							 CouponRedisKey.issuedUsers(eventId),
 							 CouponRedisKey.issueStartAt(eventId),
 							 CouponRedisKey.issueEndAt(eventId)
 				  ),
