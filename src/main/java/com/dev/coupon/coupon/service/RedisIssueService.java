@@ -33,6 +33,9 @@ public class RedisIssueService {
 	private static final RedisScript<Void> ROLLBACK_SCRIPT =
 			  RedisLuaScriptLoader.voidScript("lua/coupon/reserve_coupon_rollback.lua");
 
+	private static final RedisScript<Boolean> INIT_SCRIPT =
+			  RedisLuaScriptLoader.booleanScript("lua/coupon/init_event_issue_state.lua");
+
 	public CouponIssueResult reserveCouponIssue(Long eventId, Long userId) {
 		long nowMillis = System.currentTimeMillis();
 
@@ -74,8 +77,7 @@ public class RedisIssueService {
 					  List.of(CouponRedisKey.stock(eventId), CouponRedisKey.issuedUsers(eventId)),
 					  userId.toString()
 			);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			// DB, Redis 둘다 실패 케이스 마킹
 			resyncService.markPending(eventId);
 			throw new SystemException(SystemErrorCode.COUPON_ISSUE_COMPENSATION_FAILED, e);
@@ -91,16 +93,19 @@ public class RedisIssueService {
 		long startAt = toEpochMillis(issueStartAt);
 		long endAt = toEpochMillis(issueEndAt);
 
-		Boolean initalized = redisTemplate.opsForValue()
-				  .setIfAbsent(CouponRedisKey.stock(eventId), String.valueOf(remainingQuantity));
+		Boolean initialized = redisTemplate.execute(
+				  INIT_SCRIPT,
+				  List.of(
+							 CouponRedisKey.stock(eventId),
+							 CouponRedisKey.issueStartAt(eventId),
+							 CouponRedisKey.issueEndAt(eventId)
+				  ),
+				  String.valueOf(remainingQuantity),
+				  String.valueOf(startAt),
+				  String.valueOf(endAt)
+		);
 
-		redisTemplate.opsForValue()
-				  .setIfAbsent(CouponRedisKey.issueStartAt(eventId), String.valueOf(startAt));
-
-		redisTemplate.opsForValue()
-				  .setIfAbsent(CouponRedisKey.issueEndAt(eventId), String.valueOf(endAt));
-
-		if (!Boolean.TRUE.equals(initalized)) {
+		if (!Boolean.TRUE.equals(initialized)) {
 			throw new SystemException(CouponErrorCode.REDIS_STOCK_ALREADY_INITIALIZED);
 		}
 
