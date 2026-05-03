@@ -16,9 +16,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @Slf4j
@@ -39,6 +42,9 @@ public class CouponIssueService {
 
 		throwIfRedisIssueFailed(issueResult);
 
+		AtomicBoolean requiresResync = new AtomicBoolean(false);
+		registerRedisCompensationAfterCompletion(couponEventId, userId, requiresResync);
+
 		try {
 			User findUser = findUser(userId);
 			CouponEvent findEvent = findEvent(couponEventId);
@@ -49,12 +55,11 @@ public class CouponIssueService {
 
 			if (decreasedStockCount == 0) {
 				log.error("[COUPON_STOCK_INCONSISTENT] eventId = {}, userId = {}", couponEventId, userId);
-				redisIssueService.reserveRollback(couponEventId, userId);
-				resyncService.markPending(couponEventId);
+				requiresResync.set(true);
 				throw new SystemException(SystemErrorCode.COUPON_STOCK_INCONSISTENT);
 			}
 
-			// Redis 선점 후 DB 저장이 실패하면 Redis 롤백 처리 redisIssueService.reserveRollback()
+			// Redis 선점 후 트랜잭션이 롤백되면 afterCompletion에서 Redis 보상 처리
 			CouponIssue couponIssue = issueRepository.save(new CouponIssue(
 					  findEvent,
 					  findUser,
@@ -66,12 +71,11 @@ public class CouponIssueService {
 
 			return couponIssue.getId();
 		} catch (BusinessException e) {
-			redisIssueService.reserveRollback(couponEventId, userId);
 			throw e;
 		} catch (DataIntegrityViolationException e) {
 			// 데이터 무결성 에러 발생 시 DB유니크 제약조건 위배하면 비즈니스 에러로 치환, 그 외 저장 실패(레디스 롤백)
 			if (isCouponIssueUniqueViolation(e)) {
-				resyncService.markPending(couponEventId);
+				requiresResync.set(true);
 				log.warn("[COUPON_ALREADY_ISSUE_DB_DUPLICATE] eventId = {}, userId = {} ",
 						  couponEventId,
 						  userId
@@ -80,15 +84,36 @@ public class CouponIssueService {
 			}
 
 			log.error("[PERSIST_FAILED] eventId = {}, userId = {}", couponEventId, userId, e);
-			redisIssueService.reserveRollback(couponEventId, userId);
 			throw new SystemException(SystemErrorCode.COUPON_ISSUE_PERSIST_FAILED, e);
 		} catch (SystemException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error("[PERSIST_FAILED] eventId = {}, userId = {}", couponEventId, userId, e);
-			redisIssueService.reserveRollback(couponEventId, userId);
 			throw new SystemException(SystemErrorCode.COUPON_ISSUE_PERSIST_FAILED, e);
 		}
+	}
+
+	private void registerRedisCompensationAfterCompletion(
+			  Long couponEventId,
+			  Long userId,
+			  AtomicBoolean requiresResync
+	) {
+		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+			@Override
+			public void afterCompletion(int status) {
+				if (status == TransactionSynchronization.STATUS_COMMITTED) {
+					return;
+				}
+
+				if (status == TransactionSynchronization.STATUS_UNKNOWN || requiresResync.get()) {
+					resyncService.markPending(couponEventId);
+					return;
+				}
+
+				// redis 선점에 성공했으나, DB 트랜잭션 rollback 되고 resync가 아닌 경우
+				redisIssueService.reserveRollback(couponEventId, userId);
+			}
+		});
 	}
 
 	private CouponEvent findEvent(Long couponEventId) {
