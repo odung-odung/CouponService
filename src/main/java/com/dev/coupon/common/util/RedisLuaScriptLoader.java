@@ -13,8 +13,8 @@ public final class RedisLuaScriptLoader {
 	private RedisLuaScriptLoader() {
 	}
 
-	public static RedisScript<Long> longScript(String path) {
-		return script(path, Long.class);
+	public static RedisScript<Boolean> booleanScript(String path) {
+		return script(path, Boolean.class);
 	}
 
 	public static RedisScript<String> stringScript(String path) {

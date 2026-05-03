@@ -29,18 +29,19 @@ public interface CouponEventRepository extends JpaRepository<CouponEvent, Long>,
 
 	@Modifying(clearAutomatically = true)
 	@Query("""
-				update CouponEvent ce
-				set ce.remainingQuantity = :remainingQuantity,
-					ce.stockResyncPending = false
-				where ce.id = :couponEventId
-			""")
+			  	update CouponEvent ce
+			  	set ce.remainingQuantity = :remainingQuantity,
+			  		ce.stockResyncPending = false,
+			  		ce.issueStartAt = :issueStartAt,
+			  		ce.issueEndAt = :issueEndAt
+			  	where ce.id = :couponEventId
+			  """)
 	int completeStockResync(
 			  @Param("couponEventId") Long couponEventId,
-			  @Param("remainingQuantity") int remainingQuantity
+			  @Param("remainingQuantity") int remainingQuantity,
+			  @Param("issueStartAt") LocalDateTime issueStartAt,
+			  @Param("issueEndAt") LocalDateTime issueEndAt
 	);
-
-	@Query("select ce.totalQuantity from CouponEvent ce where ce.id = :eventId")
-	int findTotalQuantityById(@Param("eventId") Long eventId);
 
 	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("""
