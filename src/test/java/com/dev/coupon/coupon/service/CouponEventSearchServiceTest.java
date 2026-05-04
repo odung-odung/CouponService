@@ -38,6 +38,7 @@ class CouponEventSearchServiceTest {
 	private CouponEventRepository eventRepository;
 
 	@Test
+	@Rollback()
 	@DisplayName("검색 시작일이 종료일보다 뒤면 예외가 발생")
 	void searchInvalidPeriod() {
 		LocalDate searchStartAt = LocalDate.now().plusDays(2);
@@ -170,14 +171,14 @@ class CouponEventSearchServiceTest {
 				  .containsExactly(overlappedEventName);
 	}
 
-	private CouponEvent saveEvent(String name, EventStatus status, DiscountType discountType) {
+	private void saveEvent(String name, EventStatus status, DiscountType discountType) {
 		LocalDateTime issueStartAt = LocalDateTime.now().plusDays(1);
 		LocalDateTime issueEndAt = issueStartAt.plusDays(1);
 
-		return saveEvent(name, status, discountType, issueStartAt, issueEndAt);
+		saveEvent(name, status, discountType, issueStartAt, issueEndAt);
 	}
 
-	private CouponEvent saveEvent(
+	private void saveEvent(
 			  String name,
 			  EventStatus status,
 			  DiscountType discountType,
@@ -198,7 +199,7 @@ class CouponEventSearchServiceTest {
 				  issueEndAt
 		);
 
-		return eventRepository.save(event);
+		eventRepository.save(event);
 	}
 
 	private void assertBusinessException(Runnable runnable, CouponErrorCode errorCode) {
