@@ -28,7 +28,6 @@ public class CouponEventCreateRequest {
 	// @Positive를 걸지 않는다.
 	private Long maxDiscountAmount;
 
-	@NotNull
 	@Positive
 	private int totalQuantity;
 
