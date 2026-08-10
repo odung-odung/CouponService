@@ -31,12 +31,20 @@
 
 현재 구조는 Redis Lua Script로 발급 기간·중복·재고를 원자적으로 확인하고 재고를 선점한 뒤, 성공한 요청만 DB 처리 경로로 전달합니다. DB에서는 `remainingQuantity > 0` 조건부 UPDATE로 최종 재고를 차감하고 발급 이력을 저장합니다.
 
-| 구분 | 초기 구조 | 개선 구조 |
+### 개선 전 발급 흐름
+
+<img src="assets/coupon-issue-before.png" alt="DB 비관적 락 기반 쿠폰 발급 흐름" width="900">
+
+### 개선 후 발급 흐름
+
+<img src="assets/coupon-issue-after.png" alt="Redis Lua 선점과 DB 조건부 차감 기반 쿠폰 발급 흐름" width="900">
+
+| 구분 | 개선 전 | 개선 후 |
 | --- | --- | --- |
-| 사전 검증 | DB 쿠폰 이벤트 row 비관적 락 | Redis Lua Script 원자 선점 |
-| DB 재고 차감 | 락 획득 후 재고 차감 | `remainingQuantity > 0` 조건부 UPDATE |
-| 거절 요청 | DB 처리 경로에 포함 | DB 조회, UPDATE, INSERT를 수행하지 않음 |
-| 최종 기록 | DB 발급 이력 저장 | DB 발급 이력 저장 |
+| 발급 가능 여부 확인 | DB 비관적 락 획득 후 기간·중복·재고 확인 | Redis Lua로 기간·중복·재고를 원자적으로 확인·선점 |
+| DB 재고 차감 | 락을 획득한 상태에서 재고 차감 | `remainingQuantity > 0` 조건부 UPDATE |
+| 검증 실패 요청 | DB 조회와 락 획득 후 실패 응답 | Redis 단계에서 실패 응답, DB 미진입 |
+| 발급 성공 요청 | 재고 차감 후 DB 발급 이력 저장 | 조건부 재고 차감 후 DB 발급 이력 저장 |
 
 ## 쿠폰 발급 흐름
 
