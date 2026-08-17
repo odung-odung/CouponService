@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Rollback(value = false)
 class CouponEventServiceRedisInitFailureTest {
 
 	@Autowired

@@ -27,7 +27,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-@Rollback(value = false)
 @ActiveProfiles("test")
 class CouponEventSearchServiceTest {
 
@@ -51,8 +50,7 @@ class CouponEventSearchServiceTest {
 							 null,
 							 searchStartAt,
 							 searchEndAt
-				  )),
-				  CouponErrorCode.INVALID_COUPON_EVENT_SEARCH_CONDITION
+				  ))
 		);
 	}
 
@@ -202,12 +200,12 @@ class CouponEventSearchServiceTest {
 		eventRepository.save(event);
 	}
 
-	private void assertBusinessException(Runnable runnable, CouponErrorCode errorCode) {
+	private void assertBusinessException(Runnable runnable) {
 		assertThatThrownBy(runnable::run)
 				  .isInstanceOf(BusinessException.class)
 				  .satisfies(exception -> {
 					  BusinessException businessException = (BusinessException) exception;
-					  assertThat(businessException.getErrorCode()).isEqualTo(errorCode);
+					  assertThat(businessException.getErrorCode()).isEqualTo(CouponErrorCode.INVALID_COUPON_EVENT_SEARCH_CONDITION);
 				  });
 	}
 }
