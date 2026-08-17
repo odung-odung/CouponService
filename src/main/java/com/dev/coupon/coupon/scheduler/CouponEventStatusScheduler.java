@@ -3,12 +3,19 @@ package com.dev.coupon.coupon.scheduler;
 import com.dev.coupon.coupon.service.CouponEventStatusService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "coupon.scheduler",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class CouponEventStatusScheduler {
 
 	private final CouponEventStatusService eventStatusService;
