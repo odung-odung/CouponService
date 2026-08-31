@@ -80,9 +80,11 @@ class CouponUseServiceConcurrencyTest {
 				  null,
 				  100,
 				  now.plusMinutes(1),
-				  now.plusDays(1)
+				  now.plusDays(1),
+				  now
 		));
-		CouponIssue couponIssue = issueRepository.save(new CouponIssue(event, user, IssueStatus.ISSUED, now, null));
+
+		CouponIssue couponIssue = issueRepository.save(CouponIssue.issue(event, user, now));
 
 		productId = product.getId();
 		userId = user.getId();

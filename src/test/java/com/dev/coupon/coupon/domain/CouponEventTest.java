@@ -11,11 +11,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CouponEventTest {
+	private static final LocalDateTime CURRENT_TIME = LocalDateTime.of(2026, 8, 31, 12, 0);
+
+	@Test
+	@DisplayName("전달한 현재 시각을 기준으로 발급 시작 시간을 검증한다")
+	void validateIssueStartAtUsingCurrentTime() {
+		assertBusinessException(
+				  () -> CouponEvent.create(
+						 "test coupon",
+						 EventStatus.OPEN,
+						 DiscountType.FIXED_AMOUNT,
+						 1000L,
+						 null,
+						 100,
+						 CURRENT_TIME.minusSeconds(1),
+						 CURRENT_TIME.plusDays(1),
+						 CURRENT_TIME
+				  ),
+				  CouponErrorCode.INVALID_ISSUE_START_AT
+		);
+	}
 
 	@Test
 	@DisplayName("쿠폰 이벤트 생성 시 남은 수량은 전체 수량으로 초기화되고 재동기화 상태는 false")
 	void create() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		CouponEvent couponEvent = CouponEvent.create(
 				  "test coupon",
@@ -25,7 +45,8 @@ class CouponEventTest {
 				  null,
 				  100,
 				  now.plusMinutes(1),
-				  now.plusDays(1)
+				  now.plusDays(1),
+				  now
 		);
 
 		assertThat(couponEvent.getRemainingQuantity()).isEqualTo(100);
@@ -35,7 +56,7 @@ class CouponEventTest {
 	@Test
 	@DisplayName("발급 시작 시간이 현재 시간 이전이면 생성할 수 없다")
 	void invalidIssueStartAt() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -46,7 +67,8 @@ class CouponEventTest {
 							 null,
 							 100,
 							 now.minusSeconds(1),
-							 now.plusDays(1)
+							 now.plusDays(1),
+							 now
 				  ),
 				  CouponErrorCode.INVALID_ISSUE_START_AT
 		);
@@ -55,7 +77,8 @@ class CouponEventTest {
 	@Test
 	@DisplayName("발급 종료 시간이 시작 시간 이전이거나 같으면 생성할 수 없다")
 	void invalidIssueEndAt() {
-		LocalDateTime issueStartAt = LocalDateTime.now().plusDays(1);
+		LocalDateTime currentTime = CURRENT_TIME;
+		LocalDateTime issueStartAt = currentTime.plusDays(1);
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -66,7 +89,8 @@ class CouponEventTest {
 							 null,
 							 100,
 							 issueStartAt,
-							 issueStartAt
+							 issueStartAt,
+							 currentTime
 				  ),
 				  CouponErrorCode.INVALID_ISSUE_END_AT
 		);
@@ -75,7 +99,7 @@ class CouponEventTest {
 	@Test
 	@DisplayName("전체 수량이 0 이하이면 생성할 수 없다")
 	void invalidTotalQuantity() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -86,7 +110,8 @@ class CouponEventTest {
 							 null,
 							 0,
 							 now.plusMinutes(1),
-							 now.plusDays(1)
+							 now.plusDays(1),
+							 now
 				  ),
 				  CouponErrorCode.INVALID_COUPON_EVENT_TOTAL_QUANTITY
 		);
@@ -95,7 +120,7 @@ class CouponEventTest {
 	@Test
 	@DisplayName("고정 금액 할인은 최대 할인 금액을 설정할 수 없다")
 	void fixedAmountMaxDiscountNotAllowed() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -106,7 +131,8 @@ class CouponEventTest {
 							 5000L,
 							 100,
 							 now.plusMinutes(1),
-							 now.plusDays(1)
+							 now.plusDays(1),
+							 now
 				  ),
 				  CouponErrorCode.FIXED_AMOUNT_MAX_DISCOUNT_NOT_ALLOWED
 		);
@@ -115,7 +141,7 @@ class CouponEventTest {
 	@Test
 	@DisplayName("정률 할인은 최대 할인 금액이 필요하다")
 	void percentageMaxDiscountRequired() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -126,7 +152,8 @@ class CouponEventTest {
 							 null,
 							 100,
 							 now.plusMinutes(1),
-							 now.plusDays(1)
+							 now.plusDays(1),
+							 now
 				  ),
 				  CouponErrorCode.PERCENTAGE_MAX_DISCOUNT_REQUIRED
 		);
@@ -135,7 +162,7 @@ class CouponEventTest {
 	@Test
 	@DisplayName("정률 할인은 최대 할인 금액이 0보다 커야 한다")
 	void percentageMaxDiscountMustBePositive() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -146,7 +173,8 @@ class CouponEventTest {
 							 0L,
 							 100,
 							 now.plusMinutes(1),
-							 now.plusDays(1)
+							 now.plusDays(1),
+							 now
 				  ),
 				  CouponErrorCode.PERCENTAGE_MAX_DISCOUNT_REQUIRED
 		);
@@ -155,7 +183,7 @@ class CouponEventTest {
 	@Test
 	@DisplayName("정률 할인율이 100을 초과하면 생성할 수 없다")
 	void invalidPercentageDiscountValue() {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		assertBusinessException(
 				  () -> CouponEvent.create(
@@ -166,7 +194,8 @@ class CouponEventTest {
 							 5000L,
 							 100,
 							 now.plusMinutes(1),
-							 now.plusDays(1)
+							 now.plusDays(1),
+							 now
 				  ),
 				  CouponErrorCode.INVALID_PERCENTAGE_DISCOUNT_VALUE
 		);
@@ -222,7 +251,7 @@ class CouponEventTest {
 	}
 
 	private CouponEvent createFixedAmountEvent(Long discountValue) {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		return CouponEvent.create(
 				  "test coupon",
@@ -232,12 +261,13 @@ class CouponEventTest {
 				  null,
 				  100,
 				  now.plusMinutes(1),
-				  now.plusDays(1)
+				  now.plusDays(1),
+				  now
 		);
 	}
 
 	private CouponEvent createPercentageEvent(Long discountValue, Long maxDiscountAmount) {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = CURRENT_TIME;
 
 		return CouponEvent.create(
 				  "test coupon",
@@ -247,7 +277,8 @@ class CouponEventTest {
 				  maxDiscountAmount,
 				  100,
 				  now.plusMinutes(1),
-				  now.plusDays(1)
+				  now.plusDays(1),
+				  now
 		);
 	}
 }

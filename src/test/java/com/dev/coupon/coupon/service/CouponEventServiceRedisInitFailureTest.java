@@ -14,10 +14,10 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -77,9 +77,10 @@ class CouponEventServiceRedisInitFailureTest {
 		@Primary
 		RedisIssueService failingRedisIssueService(
 				  StringRedisTemplate redisTemplate,
-				  CouponStockResyncService resyncService
+				  CouponStockResyncPendingMarker resyncPendingMarker,
+				  Clock clock
 		) {
-			return new RedisIssueService(redisTemplate, resyncService) {
+			return new RedisIssueService(redisTemplate, resyncPendingMarker, clock) {
 				@Override
 				public void initEventIssueState(
 						  Long eventId,

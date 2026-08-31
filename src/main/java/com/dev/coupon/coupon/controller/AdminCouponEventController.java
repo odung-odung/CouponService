@@ -54,7 +54,7 @@ public class AdminCouponEventController {
 
 	@PostMapping("/{eventId}/resync")
 	public ApiResponse<Void> resyncCouponEventStock(@PathVariable Long eventId) {
-		stockRecoveryService.resync(eventId);
+		stockRecoveryService.recoverIfPending(eventId);
 		return ApiResponse.success(null);
 	}
 }

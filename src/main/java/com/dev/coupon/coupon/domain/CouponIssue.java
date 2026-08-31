@@ -14,7 +14,13 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Table(name = "coupon_issue")
+@Table(
+	name = "coupon_issue",
+	uniqueConstraints = @UniqueConstraint(
+		name = "uk_coupon_issue_event_user",
+		columnNames = {"coupon_event_id", "user_id"}
+	)
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CouponIssue extends BaseEntity {
 
@@ -39,18 +45,32 @@ public class CouponIssue extends BaseEntity {
 
 	private LocalDateTime usedAt;
 
-	public CouponIssue(
-			  CouponEvent couponEvent,
-			  User user,
-			  IssueStatus status,
-			  LocalDateTime issuedAt,
-			  LocalDateTime usedAt
+	private CouponIssue(
+		CouponEvent couponEvent,
+		User user,
+		IssueStatus status,
+		LocalDateTime issuedAt,
+		LocalDateTime usedAt
 	) {
 		this.couponEvent = couponEvent;
 		this.user = user;
 		this.status = status;
 		this.issuedAt = issuedAt;
 		this.usedAt = usedAt;
+	}
+
+	public static CouponIssue issue(
+		CouponEvent couponEvent,
+		User user,
+		LocalDateTime issuedAt
+	) {
+		return new CouponIssue(
+			couponEvent,
+			user,
+			IssueStatus.ISSUED,
+			issuedAt,
+			null
+		);
 	}
 
 	public void use(LocalDateTime usedAt) {

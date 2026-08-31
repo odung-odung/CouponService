@@ -66,7 +66,8 @@ class CouponEventStatusServiceTest {
 			  LocalDateTime issueStartAt,
 			  LocalDateTime issueEndAt
 	) {
-		LocalDateTime validIssueStartAt = LocalDateTime.now().plusDays(1);
+		LocalDateTime currentTime = LocalDateTime.now();
+		LocalDateTime validIssueStartAt = currentTime.plusDays(1);
 		LocalDateTime validIssueEndAt = validIssueStartAt.plusDays(1);
 
 		CouponEvent event = CouponEvent.create(
@@ -77,7 +78,8 @@ class CouponEventStatusServiceTest {
 				  null,
 				  100,
 				  validIssueStartAt,
-				  validIssueEndAt
+				  validIssueEndAt,
+				  currentTime
 		);
 
 		ReflectionTestUtils.setField(event, "issueStartAt", issueStartAt);

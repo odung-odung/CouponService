@@ -82,9 +82,10 @@ public class CouponEvent extends BaseEntity {
 			  Long maxDiscountAmount,
 			  int totalQuantity,
 			  LocalDateTime issueStartAt,
-			  LocalDateTime issueEndAt
+			  LocalDateTime issueEndAt,
+			  LocalDateTime currentTime
 	) {
-		validateIssuePeriod(issueStartAt, issueEndAt);
+		validateIssuePeriod(issueStartAt, issueEndAt, currentTime);
 		validateDiscountPolicy(discountType, discountValue, maxDiscountAmount);
 		validateTotalQuantity(totalQuantity);
 
@@ -126,11 +127,13 @@ public class CouponEvent extends BaseEntity {
 		return discountAmount;
 	}
 
-	private static void validateIssuePeriod(LocalDateTime issueStartAt, LocalDateTime issueEndAt) {
-		LocalDateTime now = LocalDateTime.now();
-
+	private static void validateIssuePeriod(
+			  LocalDateTime issueStartAt,
+			  LocalDateTime issueEndAt,
+			  LocalDateTime currentTime
+	) {
 		// 쿠폰 시작 날짜는 현재 시간보다 이전일 수 없다
-		if (!issueStartAt.isAfter(now)) {
+		if (!issueStartAt.isAfter(currentTime)) {
 			throw new BusinessException(CouponErrorCode.INVALID_ISSUE_START_AT);
 		}
 
@@ -164,6 +167,20 @@ public class CouponEvent extends BaseEntity {
 	private static void validateTotalQuantity(int totalQuantity) {
 		if (totalQuantity <= 0) {
 			throw new BusinessException(CouponErrorCode.INVALID_COUPON_EVENT_TOTAL_QUANTITY);
+		}
+	}
+
+	public void validateIssuableAt(LocalDateTime now) {
+		if (stockResyncPending) {
+			throw new BusinessException(CouponErrorCode.COUPON_NOT_ISSUABLE);
+		}
+
+		if (status != EventStatus.OPEN) {
+			throw new BusinessException(CouponErrorCode.COUPON_NOT_ISSUABLE);
+		}
+
+		if (issueStartAt.isAfter(now) || !issueEndAt.isAfter(now)) {
+			throw new BusinessException(CouponErrorCode.COUPON_NOT_ISSUABLE);
 		}
 	}
 

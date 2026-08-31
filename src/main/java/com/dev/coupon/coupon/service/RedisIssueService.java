@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -23,7 +24,8 @@ import java.util.List;
 public class RedisIssueService {
 
 	private final StringRedisTemplate redisTemplate;
-	private final CouponStockResyncService resyncService;
+	private final CouponStockResyncPendingMarker resyncPendingMarker;
+	private final Clock clock;
 
 	private static final RedisScript<String> RESERVE_SCRIPT =
 			  RedisLuaScriptLoader.stringScript("lua/coupon/reserve_coupon.lua");
@@ -36,7 +38,7 @@ public class RedisIssueService {
 			  RedisLuaScriptLoader.booleanScript("lua/coupon/init_event_issue_state.lua");
 
 	public CouponIssueResult reserveCouponIssue(Long eventId, Long userId) {
-		long nowMillis = System.currentTimeMillis();
+		long nowMillis = clock.millis();
 
 		String issueResultStatus;
 
@@ -78,7 +80,7 @@ public class RedisIssueService {
 			);
 		} catch (Exception e) {
 			// DB, Redis 둘다 실패 케이스 마킹
-			resyncService.markPending(eventId);
+			resyncPendingMarker.markPending(eventId);
 			throw new SystemException(SystemErrorCode.COUPON_ISSUE_COMPENSATION_FAILED, e);
 		}
 	}

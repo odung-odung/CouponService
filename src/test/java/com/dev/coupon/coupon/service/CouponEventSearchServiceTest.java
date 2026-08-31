@@ -185,6 +185,7 @@ class CouponEventSearchServiceTest {
 	) {
 		Long discountValue = discountType == DiscountType.PERCENTAGE ? 10L : 1000L;
 		Long maxDiscountAmount = discountType == DiscountType.PERCENTAGE ? 5000L : null;
+		LocalDateTime currentTime = LocalDateTime.now();
 
 		CouponEvent event = CouponEvent.create(
 				  name,
@@ -194,7 +195,8 @@ class CouponEventSearchServiceTest {
 				  maxDiscountAmount,
 				  100,
 				  issueStartAt,
-				  issueEndAt
+				  issueEndAt,
+				  currentTime
 		);
 
 		eventRepository.save(event);

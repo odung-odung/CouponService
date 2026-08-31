@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,11 +24,13 @@ import java.util.List;
 public class CouponIssueQueryRepositoryImpl implements CouponIssueQueryRepository {
 
 	private final JPAQueryFactory queryFactory;
+	private final Clock clock;
 
 	@Override
 	public Page<UserCouponResponse> findUsableCouponsByUserId(Long userId, Pageable pageable) {
 		QCouponEvent couponEvent = QCouponEvent.couponEvent;
 		QCouponIssue couponIssue = QCouponIssue.couponIssue;
+		LocalDateTime now = LocalDateTime.now(clock);
 
 		List<UserCouponResponse> content = queryFactory
 				  .select(Projections.constructor(
@@ -44,7 +47,7 @@ public class CouponIssueQueryRepositoryImpl implements CouponIssueQueryRepositor
 				  .join(couponIssue.couponEvent, couponEvent)
 				  .where(
 							 couponIssue.user.id.eq(userId),
-							 usableCouponCondition(couponEvent, couponIssue)
+							 usableCouponCondition(couponEvent, couponIssue, now)
 				  )
 				  .orderBy(couponIssue.id.desc())
 				  .offset(pageable.getOffset())
@@ -57,7 +60,7 @@ public class CouponIssueQueryRepositoryImpl implements CouponIssueQueryRepositor
 				  .join(couponIssue.couponEvent, couponEvent)
 				  .where(
 							 couponIssue.user.id.eq(userId),
-							 usableCouponCondition(couponEvent, couponIssue)
+							 usableCouponCondition(couponEvent, couponIssue, now)
 				  );
 
 		return PageableExecutionUtils.getPage(content, pageable, () -> {
@@ -66,8 +69,11 @@ public class CouponIssueQueryRepositoryImpl implements CouponIssueQueryRepositor
 		});
 	}
 
-	public BooleanExpression usableCouponCondition(QCouponEvent event, QCouponIssue issue) {
-		LocalDateTime now = LocalDateTime.now();
+	private BooleanExpression usableCouponCondition(
+			  QCouponEvent event,
+			  QCouponIssue issue,
+			  LocalDateTime now
+	) {
 		return issue.status.eq(IssueStatus.ISSUED)
 				  .and(event.issueStartAt.loe(now))
 				  .and(event.issueEndAt.gt(now));

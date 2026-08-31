@@ -135,7 +135,8 @@ class CouponIssueServiceConcurrencyTest {
 				  null,
 				  totalQuantity,
 				  validIssueStartAt,
-				  validIssueEndAt
+				  validIssueEndAt,
+				  now
 		);
 
 		ReflectionTestUtils.setField(event, "issueStartAt", now.minusMinutes(1));

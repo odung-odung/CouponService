@@ -52,7 +52,7 @@ class CouponStockRecoveryServiceTest {
 		List<User> issuedUsers = saveIssuedUsers(event, 3);
 		initBrokenRedisState(event);
 
-		recoveryService.resync(event.getId());
+		recoveryService.recoverIfPending(event.getId());
 
 		CouponEvent recoveredEvent = eventRepository.findById(event.getId()).orElseThrow();
 
@@ -85,7 +85,8 @@ class CouponStockRecoveryServiceTest {
 				  null,
 				  totalQuantity,
 				  validIssueStartAt,
-				  validIssueEndAt
+				  validIssueEndAt,
+				  now
 		);
 
 		ReflectionTestUtils.setField(event, "issueStartAt", now.minusMinutes(1));
@@ -102,12 +103,10 @@ class CouponStockRecoveryServiceTest {
 			User user = userRepository.save(User.builder()
 					  .name("test user " + UUID.randomUUID())
 					  .build());
-			issueRepository.save(new CouponIssue(
+			issueRepository.save(CouponIssue.issue(
 					  event,
 					  user,
-					  IssueStatus.ISSUED,
-					  LocalDateTime.now().minusMinutes(10),
-					  null
+					  LocalDateTime.now().minusMinutes(10)
 			));
 			users.add(user);
 		}

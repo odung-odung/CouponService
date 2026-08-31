@@ -20,6 +20,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.sql.SQLException;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,7 +33,8 @@ public class CouponIssueService {
 	private final CouponEventRepository eventRepository;
 	private final UserRepository userRepository;
 	private final RedisIssueService redisIssueService;
-	private final CouponStockResyncService resyncService;
+	private final CouponStockResyncPendingMarker resyncPendingMarker;
+	private final Clock clock;
 	private static final String COUPON_ISSUE_UNIQUE_CONSTRAINT = "uk_coupon_issue_event_user";
 
 	@Transactional
@@ -48,8 +50,9 @@ public class CouponIssueService {
 		try {
 			User findUser = findUser(userId);
 			CouponEvent findEvent = findEvent(couponEventId);
+			LocalDateTime now = LocalDateTime.now(clock);
 
-			validateCouponIssue(findEvent);
+			findEvent.validateIssuableAt(now);
 
 			int decreasedStockCount = eventRepository.decreaseStockIfAvailable(couponEventId);
 
@@ -60,13 +63,9 @@ public class CouponIssueService {
 			}
 
 			// Redis 선점 후 트랜잭션이 롤백되면 afterCompletion에서 Redis 보상 처리
-			CouponIssue couponIssue = issueRepository.save(new CouponIssue(
-					  findEvent,
-					  findUser,
-					  IssueStatus.ISSUED,
-					  LocalDateTime.now(),
-					  null
-			));
+			CouponIssue couponIssue = issueRepository.save(
+					  CouponIssue.issue(findEvent, findUser, now)
+			);
 			issueRepository.flush();
 
 			return couponIssue.getId();
@@ -76,11 +75,11 @@ public class CouponIssueService {
 			// 데이터 무결성 에러 발생 시 DB유니크 제약조건 위배하면 비즈니스 에러로 치환, 그 외 저장 실패(레디스 롤백)
 			if (isCouponIssueUniqueViolation(e)) {
 				requiresResync.set(true);
-				log.warn("[COUPON_ALREADY_ISSUE_DB_DUPLICATE] eventId = {}, userId = {} ",
+				log.warn("[COUPON_ALREADY_ISSUED_DB_DUPLICATE] eventId = {}, userId = {} ",
 						  couponEventId,
 						  userId
 				);
-				throw new BusinessException(CouponErrorCode.COUPON_ALREADY_ISSUE);
+				throw new BusinessException(CouponErrorCode.COUPON_ALREADY_ISSUED);
 			}
 
 			log.error("[PERSIST_FAILED] eventId = {}, userId = {}", couponEventId, userId, e);
@@ -105,7 +104,7 @@ public class CouponIssueService {
 
 				// 일반적인 실패가 아니라 redis, db둘다 신뢰하기 어려운 상황
 				if (status == TransactionSynchronization.STATUS_UNKNOWN || requiresResync.get()) {
-					resyncService.markPending(couponEventId);
+					resyncPendingMarker.markPending(couponEventId);
 					return;
 				}
 
@@ -136,7 +135,7 @@ public class CouponIssueService {
 			}
 
 			if (cause instanceof SQLException sqlException) {
-				if (isMySqlDuplicateKey(sqlException) && containsConstrainName(sqlException.getMessage())) {
+				if (isMySqlDuplicateKey(sqlException) && containsConstraintName(sqlException.getMessage())) {
 					return true;
 				}
 			}
@@ -155,32 +154,14 @@ public class CouponIssueService {
 		return sqlException.getErrorCode() == 1062;
 	}
 
-	private boolean containsConstrainName(String message) {
+	private boolean containsConstraintName(String message) {
 		return message != null
 				  && message.toLowerCase().contains(COUPON_ISSUE_UNIQUE_CONSTRAINT.toLowerCase());
 	}
 
-	private void validateCouponIssue(CouponEvent findEvent) {
-		LocalDateTime issueStartAt = findEvent.getIssueStartAt();
-		LocalDateTime issueEndAt = findEvent.getIssueEndAt();
-		LocalDateTime now = LocalDateTime.now();
-
-		if (findEvent.isStockResyncPending()) {
-			throw new BusinessException(CouponErrorCode.COUPON_NOT_ISSUABLE);
-		}
-
-		if (findEvent.getStatus() != EventStatus.OPEN) {
-			throw new BusinessException(CouponErrorCode.COUPON_NOT_ISSUABLE);
-		}
-
-		if (issueStartAt.isAfter(now) || !issueEndAt.isAfter(now)) {
-			throw new BusinessException(CouponErrorCode.COUPON_NOT_ISSUABLE);
-		}
-	}
-
 	private void throwIfRedisIssueFailed(CouponIssueResult issueResult) {
 		if (issueResult == CouponIssueResult.ALREADY_ISSUED) {
-			throw new BusinessException(CouponErrorCode.COUPON_ALREADY_ISSUE);
+			throw new BusinessException(CouponErrorCode.COUPON_ALREADY_ISSUED);
 		}
 
 		if (issueResult == CouponIssueResult.SOLD_OUT) {

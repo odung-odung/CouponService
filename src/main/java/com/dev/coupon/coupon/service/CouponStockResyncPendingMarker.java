@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class CouponStockResyncService {
+public class CouponStockResyncPendingMarker {
 
 	private final CouponEventRepository eventRepository;
 

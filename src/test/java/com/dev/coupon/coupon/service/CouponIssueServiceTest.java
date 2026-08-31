@@ -79,7 +79,7 @@ class CouponIssueServiceTest {
 
 		assertBusinessException(
 				  () -> issueService.issueCoupon(event.getId(), user.getId()),
-				  CouponErrorCode.COUPON_ALREADY_ISSUE
+				  CouponErrorCode.COUPON_ALREADY_ISSUED
 		);
 
 		assertIssueNotCreated(event);
@@ -223,7 +223,8 @@ class CouponIssueServiceTest {
 			  LocalDateTime issueEndAt,
 			  boolean stockResyncPending
 	) {
-		LocalDateTime validIssueStartAt = LocalDateTime.now().plusDays(1);
+		LocalDateTime currentTime = LocalDateTime.now();
+		LocalDateTime validIssueStartAt = currentTime.plusDays(1);
 		LocalDateTime validIssueEndAt = validIssueStartAt.plusDays(1);
 
 		CouponEvent event = CouponEvent.create(
@@ -234,7 +235,8 @@ class CouponIssueServiceTest {
 				  null,
 				  100,
 				  validIssueStartAt,
-				  validIssueEndAt
+				  validIssueEndAt,
+				  currentTime
 		);
 
 		ReflectionTestUtils.setField(event, "issueStartAt", issueStartAt);

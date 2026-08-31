@@ -20,7 +20,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -32,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
-class CouponUesServiceTest {
+class CouponUseServiceTest {
 
 	@Autowired
 	private CouponUseService useService;
@@ -55,7 +54,7 @@ class CouponUesServiceTest {
 	@Test
 	@DisplayName("쿠폰 사용 성공")
 	void useCoupon() {
-		UseCouponFixture fixture = saveUseCouponFixture(IssueStatus.ISSUED, LocalDateTime.now().plusDays(1), null);
+		UseCouponFixture fixture = saveUseCouponFixture(LocalDateTime.now().plusDays(1));
 
 		useService.useCoupon(fixture.issue().getId(), fixture.user().getId(), fixture.product().getId());
 
@@ -73,7 +72,7 @@ class CouponUesServiceTest {
 	@Test
 	@DisplayName("만료 쿠폰 사용 실패")
 	void useExpiredCoupon() {
-		UseCouponFixture fixture = saveUseCouponFixture(IssueStatus.ISSUED, LocalDateTime.now().minusDays(1), null);
+		UseCouponFixture fixture = saveUseCouponFixture(LocalDateTime.now().minusDays(1));
 
 		assertBusinessException(
 				  () -> useService.useCoupon(fixture.issue().getId(), fixture.user().getId(), fixture.product().getId()),
@@ -90,24 +89,27 @@ class CouponUesServiceTest {
 	@Test
 	@DisplayName("사용 완료 쿠폰 재사용 실패")
 	void useAlreadyUsedCoupon() {
-		UseCouponFixture fixture = saveUseCouponFixture(
-				  IssueStatus.USED,
-				  LocalDateTime.now().plusDays(1),
-				  LocalDateTime.now().minusMinutes(10)
-		);
+		UseCouponFixture fixture = saveUseCouponFixture(LocalDateTime.now().plusDays(1));
+
+		useService.useCoupon(fixture.issue().getId(), fixture.user().getId(), fixture.product().getId());
 
 		assertBusinessException(
 				  () -> useService.useCoupon(fixture.issue().getId(), fixture.user().getId(), fixture.product().getId()),
 				  CouponErrorCode.COUPON_ALREADY_USED
 		);
 
-		assertThat(countUseHistory(fixture.issue().getId())).isZero();
+		assertThat(countUseHistory(fixture.issue().getId())).isEqualTo(1);
 	}
 
 	@Test
 	@DisplayName("사용 불가 상태 쿠폰 사용 실패")
 	void useNotUsableCoupon() {
-		UseCouponFixture fixture = saveUseCouponFixture(IssueStatus.EXPIRED, LocalDateTime.now().plusDays(1), null);
+		UseCouponFixture fixture = saveUseCouponFixture(LocalDateTime.now().minusDays(1));
+
+		assertBusinessException(
+				  () -> useService.useCoupon(fixture.issue().getId(), fixture.user().getId(), fixture.product().getId()),
+				  CouponErrorCode.COUPON_EXPIRED
+		);
 
 		assertBusinessException(
 				  () -> useService.useCoupon(fixture.issue().getId(), fixture.user().getId(), fixture.product().getId()),
@@ -117,11 +119,7 @@ class CouponUesServiceTest {
 		assertThat(countUseHistory(fixture.issue().getId())).isZero();
 	}
 
-	private UseCouponFixture saveUseCouponFixture(
-			  IssueStatus issueStatus,
-			  LocalDateTime issueEndAt,
-			  LocalDateTime usedAt
-	) {
+	private UseCouponFixture saveUseCouponFixture(LocalDateTime issueEndAt) {
 		User user = userRepository.save(User.builder()
 				  .name("test user " + UUID.randomUUID())
 				  .build());
@@ -132,19 +130,18 @@ class CouponUesServiceTest {
 				  .build());
 
 		CouponEvent event = saveCouponEvent(issueEndAt);
-		CouponIssue issue = issueRepository.save(new CouponIssue(
+		CouponIssue issue = issueRepository.save(CouponIssue.issue(
 				  event,
 				  user,
-				  issueStatus,
-				  LocalDateTime.now().minusHours(1),
-				  usedAt
+				  LocalDateTime.now().minusHours(1)
 		));
 
 		return new UseCouponFixture(user, product, issue);
 	}
 
 	private CouponEvent saveCouponEvent(LocalDateTime issueEndAt) {
-		LocalDateTime validIssueStartAt = LocalDateTime.now().plusDays(1);
+		LocalDateTime currentTime = LocalDateTime.now();
+		LocalDateTime validIssueStartAt = currentTime.plusDays(1);
 		LocalDateTime validIssueEndAt = validIssueStartAt.plusDays(1);
 		CouponEvent event = CouponEvent.create(
 				  "test coupon " + UUID.randomUUID(),
@@ -154,7 +151,8 @@ class CouponUesServiceTest {
 				  null,
 				  100,
 				  validIssueStartAt,
-				  validIssueEndAt
+				  validIssueEndAt,
+				  currentTime
 		);
 
 		ReflectionTestUtils.setField(event, "issueStartAt", LocalDateTime.now().minusDays(1));

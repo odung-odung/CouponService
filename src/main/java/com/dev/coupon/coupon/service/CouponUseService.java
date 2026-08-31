@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 @Service
@@ -23,10 +24,11 @@ public class CouponUseService {
 	private final CouponIssueRepository issueRepository;
 	private final ProductRepository productRepository;
 	private final CouponUseHistoryRepository historyRepository;
+	private final Clock clock;
 
 	@Transactional(noRollbackFor = ExpiredCouponException.class)
 	public void useCoupon(Long issueId, Long userId, Long productId) {
-		LocalDateTime usedAt = LocalDateTime.now();
+		LocalDateTime usedAt = LocalDateTime.now(clock);
 
 		CouponIssue couponIssue = issueRepository.findByIdAndUserIdForUpdate(issueId, userId)
 				  .orElseThrow(() -> new BusinessException(CouponErrorCode.COUPON_ISSUE_NOT_FOUND));

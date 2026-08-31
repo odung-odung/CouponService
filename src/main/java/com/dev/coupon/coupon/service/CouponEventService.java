@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,10 +27,13 @@ public class CouponEventService {
 
 	private final CouponEventRepository repository;
 	private final RedisIssueService redisIssueService;
-	private final CouponStockResyncService resyncService;
+	private final CouponStockResyncPendingMarker resyncPendingMarker;
+	private final Clock clock;
 
 	@Transactional
 	public CouponEventResponse create(CouponEventCreateRequest request) {
+		LocalDateTime currentTime = LocalDateTime.now(clock);
+
 		CouponEvent event = repository.save(CouponEvent.create(
 				  request.getName(),
 				  request.getStatus(),
@@ -38,7 +42,8 @@ public class CouponEventService {
 				  request.getMaxDiscountAmount(),
 				  request.getTotalQuantity(),
 				  request.getIssueStartAt(),
-				  request.getIssueEndAt()
+				  request.getIssueEndAt(),
+				  currentTime
 		));
 
 		// 쿠폰 수량 init
@@ -61,23 +66,6 @@ public class CouponEventService {
 				  event.getIssueEndAt()
 		);
 	}
-
-	/* 목록 호출
-	public List<CouponEventResponse> getCouponEvents() {
-		return repository.findAll().stream().map(event ->
-				  new CouponEventResponse(
-							 event.getId(),
-							 event.getName(),
-							 event.getStatus(),
-							 event.getDiscountType(),
-							 event.getDiscountValue(),
-							 event.getMaxDiscountAmount(),
-							 event.getTotalQuantity(),
-							 event.getIssueStartAt(),
-							 event.getIssueEndAt()
-				  )).toList();
-	}
-	*/
 
 	private void initEventStockAfterCommit(
 			  Long eventId,
@@ -116,10 +104,10 @@ public class CouponEventService {
 					  remainingQuantity,
 					  e
 			);
-			resyncService.markPending(eventId);
+			resyncPendingMarker.markPending(eventId);
 		} catch (Exception e) {
 			log.error("[REDIS_STOCK_INIT_FAILED] eventId = {}, remainingQuantity = {}", eventId, remainingQuantity, e);
-			resyncService.markPending(eventId);
+			resyncPendingMarker.markPending(eventId);
 		}
 	}
 
