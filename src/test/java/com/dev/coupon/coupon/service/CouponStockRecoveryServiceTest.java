@@ -5,7 +5,6 @@ import com.dev.coupon.coupon.domain.CouponEvent;
 import com.dev.coupon.coupon.domain.CouponIssue;
 import com.dev.coupon.coupon.domain.DiscountType;
 import com.dev.coupon.coupon.domain.EventStatus;
-import com.dev.coupon.coupon.domain.IssueStatus;
 import com.dev.coupon.coupon.repository.CouponEventRepository;
 import com.dev.coupon.coupon.repository.CouponIssueRepository;
 import com.dev.coupon.user.domain.User;
