@@ -29,25 +29,15 @@ public class ProductService {
 		return ProductResponse.from(product);
 	}
 
-	/*
-	@Transactional(readOnly = true)
-	public PageResponse<ProductResponse> getProductPage(Pageable pageable) {
-		Page<ProductResponse> page = repository.findAll(pageable)
-				  .map(ProductResponse::from);
-
-		return PageResponse.from(page);
-	}
-	*/
-
 	@Transactional(readOnly = true)
 	public PageResponse<ProductResponse> search(ProductCondition condition, Pageable pageable) {
-		validationSearchCondition(condition);
+		validateSearchCondition(condition);
 		Page<ProductResponse> page = repository.search(condition, pageable);
 
 		return PageResponse.from(page);
 	}
 
-	private void validationSearchCondition(ProductCondition condition) {
+	private void validateSearchCondition(ProductCondition condition) {
 		if (condition.getMinPrice() != null
 				  && condition.getMaxPrice() != null
 				  && condition.getMinPrice() > condition.getMaxPrice()) {
