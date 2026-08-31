@@ -23,8 +23,8 @@ public class UserService {
 
 
 	@Transactional(readOnly = true)
-	public PageResponse<UserCouponResponse> getMyUsableCoupons(Long id, CouponPageRequest request) {
-		if (!userRepository.existsById(id)) {
+	public PageResponse<UserCouponResponse> getUsableCouponsByUserId(Long userId, CouponPageRequest request) {
+		if (!userRepository.existsById(userId)) {
 			throw new BusinessException(UserErrorCode.USER_NOT_FOUND);
 		}
 
@@ -34,7 +34,7 @@ public class UserService {
 			Sort.by(Sort.Direction.DESC, "id")
 		);
 
-		Page<UserCouponResponse> page = repository.findUsableCouponsByUserId(id, pageable);
+		Page<UserCouponResponse> page = repository.findUsableCouponsByUserId(userId, pageable);
 		return PageResponse.from(page);
 	}
 }

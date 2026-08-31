@@ -23,10 +23,10 @@ public class UserController {
 	private final UserService userService;
 
 	@GetMapping("/{userId}/coupons")
-	public ApiResponse<PageResponse<UserCouponResponse>> getMyCoupons(
+	public ApiResponse<PageResponse<UserCouponResponse>> getUserCoupons(
 			  @PathVariable @Positive Long userId,
 			  @Valid CouponPageRequest request
 	) {
-		return ApiResponse.success(userService.getMyUsableCoupons(userId, request));
+		return ApiResponse.success(userService.getUsableCouponsByUserId(userId, request));
 	}
 }
